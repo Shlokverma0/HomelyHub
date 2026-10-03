@@ -1,13 +1,14 @@
 import React from "react";
 
-export const AddressField = ({ form }) => {
+export const AddressField = ({ form: _form }) => {
+  const Field = _form.Field;
   return (
     <div className="address-container ">
       <h4 className="address-header">Address</h4>
       <label className="form-labels">Address to your place</label>
       <br></br>
       <div className="address-fields">
-        <form.Field name="address.area">
+        <Field name="address.area">
           {(field) => (
             <input
               className="area"
@@ -18,9 +19,9 @@ export const AddressField = ({ form }) => {
               required
             />
           )}
-        </form.Field>
+        </Field>
 
-        <form.Field name="address.city">
+        <Field name="address.city">
           {(field) => (
             <input
               className="city"
@@ -31,8 +32,8 @@ export const AddressField = ({ form }) => {
               onChange={(e) => field.handleChange(e.target.value)}
             />
           )}
-        </form.Field>
-        <form.Field name="address.state">
+        </Field>
+        <Field name="address.state">
           {(field) => (
             <input
               className="state"
@@ -43,8 +44,8 @@ export const AddressField = ({ form }) => {
               onChange={(e) => field.handleChange(e.target.value)}
             />
           )}
-        </form.Field>
-        <form.Field name="address.pincode">
+        </Field>
+        <Field name="address.pincode">
           {(field) => (
             <input
               className="pincode"
@@ -55,7 +56,7 @@ export const AddressField = ({ form }) => {
               onChange={(e) => field.handleChange(e.target.value)}
             />
           )}
-        </form.Field>
+        </Field>
       </div>
     </div>
   );

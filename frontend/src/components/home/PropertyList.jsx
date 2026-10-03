@@ -6,6 +6,7 @@ import "../../css/Home.css";
 import {useDispatch, useSelector} from "react-redux";
 import {propertyAction} from "../../store/Property/property-slice";
 import {getAllProperties} from "../../store/Property/property-action";
+import LoadingSpinner from "../LoadingSpinner";
 
 const Card = ({ id, image, name, address, price }) => {
   return (
@@ -37,7 +38,7 @@ const PropertyList = () => {
   const [currentPage, setCurrentPage] = useState({ page: 1 });
 
   const dispatch = useDispatch();
-  const {properties, totalProperties} = useSelector((state) => state.properties);
+  const {properties, totalProperties, loading, error} = useSelector((state) => state.properties);
 
   const lastPage = Math.ceil(totalProperties / 12);
 
@@ -69,17 +70,21 @@ const PropertyList = () => {
 
   return (
     <>
-      {properties.length === 0 ? (
-        <p className={"not_found"}>Property not found</p>
+      {loading ? (
+        <LoadingSpinner />
+      ) : error ? (
+        <p className="not_found">{error}</p>
+      ) : properties.length === 0 ? (
+        <p className={"not_found"}>No stays found. Try changing your search or filters.</p>
       ) : (
         <div className="propertylist" ref={propertyListRef}>
           {properties.map((property) => (
             <Card
               key={property._id}
               id={property._id}
-              image={property.images[0].url}
+              image={property.images?.[0]?.url || "/assets/property2.webp"}
               name={property.propertyName}
-              address={`${property.address.city}, ${property.address.state} ${property.address.pincode}`}
+              address={[property.address?.city, property.address?.state, property.address?.pincode].filter(Boolean).join(", ")}
               price={property.price}
               slug={property.slug}
             />
@@ -99,7 +104,7 @@ const PropertyList = () => {
         <button
           className="next_btn"
           onClick={() => setCurrentPage((prev) => ({ page: prev.page + 1 }))}
-          disabled={properties.length < 12 || currentPage.page === lastPage}
+          disabled={loading || properties.length < 12 || currentPage.page >= lastPage}
         >
           <span className="material-symbols-outlined">arrow_forward_ios</span>
         </button>

@@ -11,6 +11,8 @@ import {
   updateMe,
   updatePassword,
 } from "../controllers/authController.js";
+import { getMyProperties } from "../controllers/propertyController.js";
+import { writeDescription } from "../controllers/aiController.js";
 
 
 const router = express.Router();
@@ -23,6 +25,8 @@ router.route("/updateMyPassword").patch(protect, updatePassword);
 router.route("/forgotPassword").post(forgotPassword);
 router.route("/resetPassword/:token").patch(resetPassword);
 router.route("/me").get(protect, check);
+router.route("/myAccommodation").get(protect, getMyProperties);
+router.route("/generateDescription").post(protect, writeDescription);
 
 
 export { router };

@@ -19,10 +19,12 @@ const propertyDetailsSlice = createSlice({
   reducers:{
     getListRequest(state){
       state.loading = true; 
+      state.error = null;
     },
     getPropertyDetails(state,action){
       state.propertyDetails = action.payload;
       state.loading = false;
+      state.error = null;
     },
     getErrors(state,action){
       state.error = action.payload;

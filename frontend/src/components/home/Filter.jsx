@@ -20,9 +20,7 @@ const Filter = () => {
 
   const dispatch = useDispatch();
   useEffect(() => {
-    // TODO: add your "apply filters + fetch properties" logic here.
-    // `selectedFilters` holds the values chosen inside FilterModal.
-    dispatch(propertyAction.updateSearchParams(selectedFilters));
+    dispatch(propertyAction.updateSearchParams({ ...selectedFilters, page: 1 }));
     dispatch(getAllProperties());
   }, [selectedFilters, dispatch]);
 

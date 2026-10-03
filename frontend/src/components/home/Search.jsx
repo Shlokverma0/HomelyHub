@@ -9,23 +9,16 @@ import { getAllProperties } from "../../store/Property/property-action";
 
 const Search = () => {
   const { RangePicker } = DatePicker;
-  const [keyword, setKeyword] = useState({});
+  const [keyword, setKeyword] = useState({ city: "", guests: "", dateIn: "", dateOut: "" });
   const [value, setValue] = useState([]);
 
   const dispatch = useDispatch();
 
   function searchHandler(e) {
     e.preventDefault();
-    // TODO: add your search logic here. `keyword` holds
-    // { city, guests, dateIn, dateOut }.
-    dispatch(propertyAction.updateSearchParams(keyword));
+    dispatch(propertyAction.updateSearchParams({ ...keyword, page: 1 }));
     dispatch(getAllProperties());
-    setKeyword({
-      city: "",
-      guests: "",
-      dateIn: "",
-      dateOut: "",
-    });
+    setKeyword({ city: "", guests: "", dateIn: "", dateOut: "" });
     setValue([]);
   }
 
@@ -44,19 +37,19 @@ const Search = () => {
 
   return (
     <>
-      <div className="searchbar">
+      <form className="searchbar" onSubmit={searchHandler}>
         <input
           className="search"
           id="search_destination"
           placeholder="Search destinations"
           type="text"
-          value={keyword.city}
+          value={keyword.city || ""}
           onChange={(e) => updateKeyword("city", e.target.value)}
         />
         <Space direction="vertical" size={12}>
           <RangePicker
             value={value}
-            format="DD-MM-YYYY"
+            format="YYYY-MM-DD"
             picker="date"
             className="date_picker"
             disabledDate={(current) => {
@@ -70,15 +63,13 @@ const Search = () => {
           id="addguest"
           placeholder="Add guests"
           type="number"
-          onChange={(e) => updateKeyword("guests", +e.target.value)}
+          value={keyword.guests || ""}
+          onChange={(e) => updateKeyword("guests", e.target.value)}
         />
-        <span
-          className="material-symbols-outlined searchicon"
-          onClick={searchHandler}
-        >
+        <button className="material-symbols-outlined searchicon" type="submit" aria-label="Search stays">
           search
-        </span>
-      </div>
+        </button>
+      </form>
     </>
   );
 };

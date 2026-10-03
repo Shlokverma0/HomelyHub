@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import "../../css/PropertyListing.css";
+import React, { useEffect } from "react";
 import "../../css/PropertyListing.css";
 import PropertyImg from "./PropertyImg";
 import PaymentForm from "./PaymentForm";
@@ -13,7 +12,7 @@ import {getPropertyDetails} from "../../store/Property/PropertyDetails/propertyD
 const PropertyListing = () => {
   const { id } = useParams();
   const dispatch = useDispatch()
-  const {loading, propertydetails} = useSelector(
+  const {loading, propertyDetails, error} = useSelector(
   (state) => state.propertydetails
   )
 
@@ -23,12 +22,15 @@ useEffect(()=>{
  
 
 
-  if (loading || !propertydetails)
+  if (loading)
     return (
       <div className="row justify-content-around mt-5">
         <LoadingSpinner />
       </div>
     );
+
+  if (error || !propertyDetails)
+    return <p className="not_found">{error || "Property not found."}</p>;
 
   const {
     propertyName,
@@ -39,7 +41,7 @@ useEffect(()=>{
     maximumGuest,
     price,
     currentBookings,
-  } = propertydetails;
+  } = propertyDetails;
 
   return (
     <div className="property-container">

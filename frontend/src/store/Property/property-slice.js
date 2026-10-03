@@ -19,20 +19,28 @@ const propertySlice = createSlice({
   reducers:{
     getRequest(state){
       state.loading = true;
+      state.error = null;
     },
     getProperties(state,action){
       state.properties = action.payload.data;
-      state.totalProperties = action.payload.all_properties;
+      state.totalProperties = action.payload.all_properties ?? action.payload.data.length;
       state.loading = false; //req finished => hide the loader
     },
     updateSearchParams:(state,action)=>{
-      state.searchParams = Object.keys(action.payload).length ===0 ?{} : {
-        ...state.searchParams,
-        ...action.payload
+      for (const [key, value] of Object.entries(action.payload)) {
+        if (value === "" || value === null || value === undefined) {
+          delete state.searchParams[key];
+        } else {
+          state.searchParams[key] = value;
+        }
       }
     },
     getErrors(state,action){
-      state.error = action.payload
+      state.error = action.payload;
+      state.loading = false;
+    },
+    clearErrors(state){
+      state.error = null;
     }
 
   }

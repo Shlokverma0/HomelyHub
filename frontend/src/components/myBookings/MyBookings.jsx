@@ -1,30 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import "../../css/MyBookings.css";
 import ProgressSteps from "../ProgressSteps";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../LoadingSpinner";
 import {useDispatch, useSelector} from "react-redux";
-import { fetchBookingDetails, fetchUserBookings } from "../../store/Booking/booking-action";
+import { fetchUserBookings } from "../../store/Booking/booking-action";
 
 
 const MyBookings = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {bookings, loaidng} = useSelector((state)=> state.booking);
+  const { bookings, loading, error } = useSelector((state) => state.booking);
   useEffect(() => {
     //fetch the user bookings here and set them above.
     dispatch(fetchUserBookings())
   }, [dispatch]);
 
-  console.log(bookings);
-
   const handleBookingClick = (bookingId) => {
-    // TODO: fetch this booking's details here if you need to.
-    dispatch(fetchBookingDetails(bookingId))
     navigate(`/user/myBookings/${bookingId}`);
   };
 
-  if (bookings.length === 0 && !loading) {
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+  if (error) {
+    return <p className="not_found">{error}</p>;
+  }
+  if (bookings.length === 0) {
     return (
       <div
         className="d-flex justify-content-center align-items-center"
@@ -38,10 +40,7 @@ const MyBookings = () => {
     <>
       <ProgressSteps />
       <div className="wow">
-        {loading && <LoadingSpinner />}
-        {!loading &&
-          bookings.length > 0 &&
-          bookings.map((booking) => (
+        {bookings.map((booking) => (
             <div
               className="main-container"
               onClick={() => handleBookingClick(booking._id)}
@@ -51,18 +50,13 @@ const MyBookings = () => {
                 <div className="image-container col-lg-3 col-md-3">
                   <img
                     className="booking-img"
-                    src={
-                      booking.property.images &&
-                      booking.property.images.length > 0
-                        ? booking.property.images[0].url
-                        : undefined
-                    }
+                    src={booking.property?.images?.[0]?.url || "/assets/property2.webp"}
                     alt="bookings"
                   />
                 </div>
                 <div className="booking-information col-lg-9 col-md-9">
                   <h6 className="hotel-name">
-                    {booking.property.propertyName}
+                    {booking.property?.propertyName || "Property"}
                   </h6>
                   <div className="stay-information">
                     <span className="info">
@@ -77,7 +71,7 @@ const MyBookings = () => {
                       </span>
                       {new Date(booking.fromDate).toLocaleDateString()}
                     </span>
-                    <span class="material-symbols-outlined icon">
+                    <span className="material-symbols-outlined icon">
                       arrow_forward
                     </span>
                     <span className="info">
@@ -88,8 +82,8 @@ const MyBookings = () => {
                     </span>
                   </div>
                   <h5 className="booking-price">
-                    <span class="material-symbols-outlined">payments</span>{" "}
-                    Total Price :&#8377; {booking.price}
+                    <span className="material-symbols-outlined">payments</span>{" "}
+                    Reservation total: &#8377; {booking.price}
                   </h5>
                 </div>
               </div>

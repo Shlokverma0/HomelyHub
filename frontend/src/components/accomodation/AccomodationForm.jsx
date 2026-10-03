@@ -6,6 +6,7 @@ import { AddressField } from "./AddressField";
 import AmenitiesField from "./AmenitiesField";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { axiosInstance } from "../../utils/axios.js";
 
 const Section = ({ icon, title, hint, children }) => (
   <section className="accf-card">
@@ -21,9 +22,7 @@ const Section = ({ icon, title, hint, children }) => (
 const AccomodationForm = () => {
   const navigate = useNavigate();
 
-  // STATIC: was `useSelector((state) => state.accomodation)`.
-  // TODO: replace with your own create-accomodation logic.
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
   const form = useForm({
@@ -35,17 +34,18 @@ const AccomodationForm = () => {
       extraInfo: undefined,
       images: [],
       amenities: [],
-      address: {},
+      address: { area: "", city: "", state: "", pincode: "" },
       checkIn: undefined,
       checkOut: undefined,
-      maximumGuest: 0,
+      maximumGuest: 1,
       price: "",
     },
     onSubmit: async ({ value }) => {
+      setLoading(true);
       try {
-        console.log(value);
-        // TODO: add your "create accomodation" logic here.
-        // The payload the original app used:
+        if (!value.images.length) {
+          throw new Error("Add at least one property photo.");
+        }
         const newAccomodation = {
           propertyName: value.name,
           description: value.description,
@@ -55,17 +55,18 @@ const AccomodationForm = () => {
           images: value.images,
           address: value.address,
           amenities: value.amenities,
-          checkInTime: value.checkIn,
-          checkOutTime: value.checkOut,
-          maximumGuest: value.maximumGuest,
-          price: value.price,
+          checkInTime: value.checkIn || "14:00",
+          checkOutTime: value.checkOut || "11:00",
+          maximumGuest: Number(value.maximumGuest),
+          price: Number(value.price),
         };
-        console.log(newAccomodation);
-        toast.success("New Property Created Successfully");
+        await axiosInstance.post("/v1/rent/listing", newAccomodation);
+        toast.success("Your property has been published.");
         navigate("/accomodation");
       } catch (error) {
-        toast.error(error.message);
-        console.error(error.message);
+        toast.error(error.response?.data?.message || error.message || "Could not publish this property.");
+      } finally {
+        setLoading(false);
       }
     },
   });
@@ -84,10 +85,10 @@ const AccomodationForm = () => {
       field.handleChange(description);
       toast.success("Description added");
     } catch (error) {
-      toast.error("Could not generate a description");
-      console.error(error);
+      toast.error(error.response?.data?.message || "Could not generate a description.");
+    } finally {
+      setAiLoading(false);
     }
-    setAiLoading(false);
   };
 
   return (
@@ -116,6 +117,7 @@ const AccomodationForm = () => {
                 className="accf-input"
                 type="text"
                 placeholder="Sunny cottage near the beach"
+                required
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
@@ -127,7 +129,7 @@ const AccomodationForm = () => {
           <AddressField form={form} />
         </Section>
 
-        <Section icon="photo_library" title="Photos" hint="At least 6">
+        <Section icon="photo_library" title="Photos" hint="Add at least 1, up to 12">
           <form.Field name="images">
             {(field) => <ImagesUploading field={field} />}
           </form.Field>
@@ -141,6 +143,7 @@ const AccomodationForm = () => {
                 {(field) => (
                   <select
                     className="accf-input"
+                    required
                     value={field.state.value || ""}
                     onChange={(e) => field.handleChange(e.target.value)}
                   >
@@ -162,6 +165,7 @@ const AccomodationForm = () => {
                 {(field) => (
                   <select
                     className="accf-input"
+                    required
                     value={field.state.value || ""}
                     onChange={(e) => field.handleChange(e.target.value)}
                   >
@@ -221,6 +225,7 @@ const AccomodationForm = () => {
                   className="accf-input accf-textarea"
                   rows="5"
                   placeholder="Write a few lines, or let AI do it for you"
+                  required
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
@@ -267,6 +272,9 @@ const AccomodationForm = () => {
                     className="accf-input"
                     type="number"
                     placeholder="2"
+                    min="1"
+                    max="50"
+                    required
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
@@ -282,6 +290,8 @@ const AccomodationForm = () => {
                     className="accf-input"
                     type="number"
                     placeholder="2000"
+                    min="1"
+                    required
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />

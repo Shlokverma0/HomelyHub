@@ -1,22 +1,48 @@
-import axios from "axios";
-import { axiosInstance}  from "../../utils/axios";
-import { setBookingDetails, setBookings } from "./booking-slice";
+import { axiosInstance } from "../../utils/axios.js";
+import {
+  addBooking,
+  setBookingDetails,
+  setBookingError,
+  setBookingRequest,
+  setBookings,
+} from "./booking-slice.js";
 
-//fetch booking details
-export const fetchBookingDetails = (bookingId) => async(dispatch)=>{
+const errorMessage = (error) =>
+  error.response?.data?.message || error.message || "Could not complete the booking request.";
+
+export const fetchBookingDetails = (bookingId) => async (dispatch) => {
   try {
-    const response = await axiosInstance.get(`/v1/rent/user/booking/${bookingId}`)
-    dispatch(setBookingDetails(response.data.data));
+    dispatch(setBookingRequest());
+    const { data } = await axiosInstance.get(
+      `/v1/rent/user/booking/${bookingId}`,
+    );
+    dispatch(setBookingDetails(data.data.booking));
   } catch (error) {
-    console.error("Error fetching booking details", error)
+    dispatch(setBookingError(errorMessage(error)));
   }
-}
-//fetch user bookings
-export const fetchUserBookings = () => async(dispatch)=>{
+};
+
+export const fetchUserBookings = () => async (dispatch) => {
   try {
-    const response = await axiosInstance.get("/v1/rent/user/booking")
-    dispatch(setBookings(response.data.data.bookings))
+    dispatch(setBookingRequest());
+    const { data } = await axiosInstance.get("/v1/rent/user/booking");
+    dispatch(setBookings(data.data.bookings));
   } catch (error) {
-    console.error("Error fetching bookings", error)
+    dispatch(setBookingError(errorMessage(error)));
   }
-}
+};
+
+export const createBooking = (bookingDraft) => async (dispatch) => {
+  try {
+    dispatch(setBookingRequest());
+    const { data } = await axiosInstance.post(
+      "/v1/rent/user/booking",
+      bookingDraft,
+    );
+    dispatch(addBooking(data.data.booking));
+    return data.data.booking;
+  } catch (error) {
+    dispatch(setBookingError(errorMessage(error)));
+    throw error;
+  }
+};

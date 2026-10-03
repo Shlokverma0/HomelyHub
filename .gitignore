@@ -1,5 +1,11 @@
 node_modules/
-.env
+frontend/node_modules/
+frontend/dist/
+.pnpm-store/
+frontend/.pnpm-store/
 .env
 .env.*
 !.env.example
+npm-debug.log*
+.DS_Store
+Thumbs.db

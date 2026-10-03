@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "../../css/Login.css";
 import toast from "react-hot-toast";
 import LoadingSpinner from "../LoadingSpinner";
@@ -11,6 +11,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const dispatch = useDispatch();
   const { isAuthenticated, errors, loading } = useSelector((state) => state.user);
@@ -20,10 +21,10 @@ const Login = () => {
       toast.error(errors);
       dispatch(userActions.clearErrors());
     } else if (isAuthenticated) {
-      navigate("/");
+      navigate(location.state?.from || "/", { replace: true });
       toast.success("User logged in successfully");
     }
-  }, [isAuthenticated, errors, navigate]);
+  }, [isAuthenticated, errors, navigate, dispatch, location.state]);
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -44,6 +45,7 @@ const Login = () => {
                   type="email"
                   id="email_field"
                   className="form-control"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -55,6 +57,7 @@ const Login = () => {
                   type="password"
                   id="password_field"
                   className="form-control"
+                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -68,11 +71,12 @@ const Login = () => {
                 id="login_button"
                 type="submit"
                 className="loginbutton btn-block py-3"
+                disabled={loading}
               >
-                LOGIN
+                {loading ? "LOGGING IN..." : "LOGIN"}
               </button>
 
-              <Link to="/signup" className="float-right mt-3">
+              <Link to="/signup" state={location.state} className="float-right mt-3">
                 New User?
               </Link>
             </form>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import "../../css/BookingDetails.css";
 import PropertyImg from "../propertyListing/PropertyImg";
 import { useParams } from "react-router-dom";
@@ -12,22 +12,21 @@ const BookingDetails = () => {
 
   // STATIC: was `useSelector((state) => state.booking)`.
   // TODO: replace with your own booking details fetching logic.
-  const{bookingDetails} = useSelector((state)=> state.booking);
+  const{bookingDetails, loading, error} = useSelector((state)=> state.booking);
 
   useEffect(() => {
-    // TODO: fetch the booking details for `bookingId` here and set them below.
-    // Statically we just look the booking up in the placeholder data.
     dispatch(fetchBookingDetails(bookingId))
   }, [dispatch ,bookingId]);
 
-  console.log(bookingDetails);
-
-  if (!bookingDetails || !bookingDetails.property) {
+  if (loading || (!bookingDetails && !error)) {
     return (
       <div className="row justify-content-around mt-5">
         <LoadingSpinner />
       </div>
     );
+  }
+  if (error || !bookingDetails?.property) {
+    return <p className="not_found">{error || "Booking details not found."}</p>;
   }
 
   return (
@@ -58,7 +57,7 @@ const BookingDetails = () => {
               </span>
               {new Date(bookingDetails.fromDate).toLocaleDateString()}
             </span>
-            <span class="material-symbols-outlined  stay-icon">
+          <span className="material-symbols-outlined stay-icon">
               arrow_forward
             </span>
             <span className="details">

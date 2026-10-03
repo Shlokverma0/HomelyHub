@@ -54,10 +54,10 @@ const AiTripPlanner = () => {
       setResult(data);
       toast.success("Your trip plan is ready");
     } catch (error) {
-      toast.error("Could not create a trip plan, please try again");
-      console.error(error);
+      toast.error(error.response?.data?.message || "Could not create a trip plan. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

@@ -1,11 +1,11 @@
 {
-  "name": "backend",
+  "name": "homelyhub-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Express and MongoDB API for HomelyHub property reservations",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node src/index.js"
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",

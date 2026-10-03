@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../../css/Login.css";
 import {useDispatch, useSelector} from "react-redux";
 import { getSignup } from "../../store/User/user-action";
@@ -8,9 +8,10 @@ import { userActions } from "../../store/User/user-slice";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const dipatch = useDispatch();
+  const location = useLocation();
+  const dispatch = useDispatch();
 
-  const {isAuthenticated, errors} = useSelector((state)=> state.user);
+  const {isAuthenticated, errors, loading} = useSelector((state)=> state.user);
 
   const [user, setUser] = useState({
     name: "",
@@ -29,8 +30,7 @@ const Signup = () => {
       toast.error("Passwords do not match");
       return;
     }
-    dispatchEvent(getSignup(user))
-    console.log(user);
+      dispatch(getSignup(user));
   };
   const onChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -40,10 +40,10 @@ const Signup = () => {
       toast.error(errors);
       dispatch(userActions.clearErrors())
     }else if(isAuthenticated){
-      navigate("/");
+      navigate(location.state?.from || "/", { replace: true });
       toast.success("User logged in successfully")
     }
-  },[isAuthenticated,errors,navigate])
+  },[isAuthenticated,errors,navigate,dispatch,location.state])
 
 
 
@@ -63,6 +63,7 @@ const Signup = () => {
               id="name_field"
               className="form-control"
               name="name"
+              required
               value={name}
               onChange={onChange}
             />
@@ -75,6 +76,7 @@ const Signup = () => {
               id="email_field"
               className="form-control"
               name="email"
+              required
               value={email}
               onChange={onChange}
             />
@@ -87,6 +89,8 @@ const Signup = () => {
               id="password_field"
               className="form-control"
               name="password"
+              minLength={8}
+              required
               value={password}
               onChange={onChange}
             />
@@ -99,6 +103,8 @@ const Signup = () => {
               id="passwordConfirm_field"
               className="form-control"
               name="passwordConfirm"
+              minLength={8}
+              required
               value={passwordConfirm}
               onChange={onChange}
             />
@@ -106,10 +112,11 @@ const Signup = () => {
           <div className="form-group">
             <label htmlFor="phoneNumber_field">Phone Number</label>
             <input
-              type="text"
+              type="tel"
               id="phoneNumber_field"
               className="form-control"
               name="phoneNumber"
+              required
               value={phoneNumber}
               onChange={onChange}
             />
@@ -119,8 +126,9 @@ const Signup = () => {
             id="register_button"
             type="submit"
             className="loginbutton btn-block py-3"
+            disabled={loading}
           >
-            REGISTER
+            {loading ? "CREATING ACCOUNT..." : "REGISTER"}
           </button>
         </form>
       </div>

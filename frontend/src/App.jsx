@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 
 import PropertyList from "./components/home/PropertyList";
@@ -16,7 +17,7 @@ import Profile from "./components/user/Profile";
 import EditProfile from "./components/user/EditProfile";
 import MyBookings from "./components/myBookings/MyBookings";
 import BookingDetails from "./components/myBookings/BookingDetails";
-import { useState } from "react";
+import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import AccomodationForm from "./components/accomodation/AccomodationForm";
 import ForgetPassword from "./components/user/ForgetPassword";
@@ -26,13 +27,21 @@ import Payment from "./components/payment/Payment";
 import NotFound from "./components/NotFound";
 import AiTripPlanner from "./components/aiTripPlanner/AiTripPlanner";
 
-import {useDispatch, useSelector} from "react-redux";
-import {useEffect} from "react";
-import {userActions} from "./store/User/user-slice" ;
-import {currentUser} from "./store/User/user-action";
+import { useDispatch, useSelector } from "react-redux";
+import { userActions } from "./store/User/user-slice";
+import { currentUser } from "./store/User/user-action";
+import LoadingSpinner from "./components/LoadingSpinner";
+
+const RequireAuth = ({ children }) => {
+  const { authChecked, user } = useSelector((state) => state.user);
+  const location = useLocation();
+  if (!authChecked) return <LoadingSpinner />;
+  return user ? children : <Navigate to="/login" state={{ from: location }} replace />;
+};
+
 function App() {
   const dispatch = useDispatch();
-  const {errors,user} = useSelector((state)=>state.user);
+  const { errors } = useSelector((state) => state.user);
   useEffect(()=>{
     if(errors){
       dispatch(userActions.clearErrors())
@@ -54,16 +63,13 @@ function App() {
 
             <Route path="login" element={<Login />} />
             <Route path="signup" element={<Signup />} />
-            <Route path="profile" element={<Profile />} />
-            <Route
-              path="editprofile"
-              element={user ? <EditProfile /> : <Navigate to="/login" />}
-            />
+            <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="editprofile" element={<RequireAuth><EditProfile /></RequireAuth>} />
 
             <Route path="ai-trip-planner" element={<AiTripPlanner />} />
 
-            <Route path="accomodation" element={<Accomodation />} />
-            <Route path="accomodationform" element={<AccomodationForm />} />
+            <Route path="accomodation" element={<RequireAuth><Accomodation /></RequireAuth>} />
+            <Route path="accomodationform" element={<RequireAuth><AccomodationForm /></RequireAuth>} />
 
             <Route path="user/forgotPassword" element={<ForgetPassword />} />
             <Route
@@ -72,21 +78,21 @@ function App() {
             />
             <Route
               path="user/updatepassword"
-              element={user ? <UpdatePassword /> : <Navigate to="/login" />}
+              element={<RequireAuth><UpdatePassword /></RequireAuth>}
             />
 
             <Route
               path="user/mybookings"
-              element={user ? <MyBookings /> : <Navigate to="/login" />}
+              element={<RequireAuth><MyBookings /></RequireAuth>}
             />
             <Route
               path="user/mybookings/:bookingId"
-              element={user ? <BookingDetails /> : <Navigate to="/login" />}
+              element={<RequireAuth><BookingDetails /></RequireAuth>}
             />
 
             <Route
               path="payment/:propertyId"
-              element={user ? <Payment /> : <Navigate to="/login" />}
+              element={<RequireAuth><Payment /></RequireAuth>}
             />
 
             <Route path="*" element={<NotFound />} />

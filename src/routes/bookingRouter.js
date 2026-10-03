@@ -1,15 +1,15 @@
-import express from "express"
-const bookingRouter = express.Router()
+import express from "express";
+import { protect } from "../controllers/authController.js";
+import {
+  createBooking,
+  getBookingDetails,
+  getUserBookings,
+} from "../controllers/bookingController.js";
 
-import{
-  getBookingDetails,getUserBookings,verifyPayment,createOrder
-} from "../controllers/bookingController.js"
+const bookingRouter = express.Router();
 
-import {protect} from "../controllers/authController.js"
+bookingRouter.use(protect);
+bookingRouter.route("/").get(getUserBookings).post(createBooking);
+bookingRouter.route("/:bookingId").get(getBookingDetails);
 
-bookingRouter.get("/",protect,getUserBookings);
-bookingRouter.get("/:bookingId",protect,getBookingDetails);
-bookingRouter.post("/create-order",protect,createOrder);
-bookingRouter.post("/verify-payment",protect,verifyPayment);
-
-export {bookingRouter};
+export { bookingRouter };

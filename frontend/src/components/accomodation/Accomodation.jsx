@@ -1,19 +1,31 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import { axiosInstance } from "../../utils/axios.js";
 import "../../css/Accomodation.css";
 import ProgressSteps from "../ProgressSteps";
 import MyAccomodation from "./MyAccomodation";
-import { Link } from "react-router-dom";
 import LoadingSpinner from "../LoadingSpinner";
-import { STATIC_ACCOMODATION } from "../../data/staticData";
 
 const Accomodation = () => {
-  // STATIC: was `useSelector((state) => state.accomodation)`.
-  // TODO: replace with your own accomodation fetching logic.
-  const [accomodation] = useState(STATIC_ACCOMODATION);
-  const [loading] = useState(false);
+  const [accomodation, setAccomodation] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: fetch the user's accomodations here and set them above.
+    const loadAccomodations = async () => {
+      try {
+        const { data } = await axiosInstance.get("/v1/rent/user/myAccommodation");
+        setAccomodation(data.data);
+      } catch (error) {
+        toast.error(
+          error.response?.data?.message || "Could not load your properties.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAccomodations();
   }, []);
 
   return (
@@ -24,11 +36,11 @@ const Accomodation = () => {
           <button className="add-new-place">+ Add new place</button>
         </Link>
         {loading && <LoadingSpinner />}
-        {accomodation.length === 0 && !loading && (
-          <p>Accomodation not available</p>
+        {!loading && accomodation.length === 0 && (
+          <p>You have not published a property yet.</p>
         )}
-        {accomodation.length > 0 && !loading && (
-          <MyAccomodation accomodation={accomodation} loading={loading} />
+        {!loading && accomodation.length > 0 && (
+          <MyAccomodation accomodation={accomodation} />
         )}
       </div>
     </>

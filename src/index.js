@@ -1,40 +1,67 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
+import "dotenv/config";
 import cookieParser from "cookie-parser";
-import connectDB from "./utils/db.js"
-import {router} from "./routes/userRoutes.js"
-import {propertyRouter} from "./routes/propertyRouter.js";
-import {bookingRouter} from "./routes/bookingRouter.js"
-
-dotenv.config();
+import cors from "cors";
+import express from "express";
+import { bookingRouter } from "./routes/bookingRouter.js";
+import { propertyRouter } from "./routes/propertyRouter.js";
+import { tripRouter } from "./routes/tripRouter.js";
+import { router as userRouter } from "./routes/userRoutes.js";
+import connectDB from "./utils/db.js";
 
 const app = express();
+const port = Number(process.env.PORT) || 8080;
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim());
 
-//express.json
-app.use(express.json({limit: "100mb"}));
+app.disable("x-powered-by");
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("This origin is not allowed by CORS"));
+    },
+    credentials: true,
+  }),
+);
+app.use(express.json({ limit: "12mb" }));
+app.use(express.urlencoded({ extended: true, limit: "12mb" }));
+app.use(cookieParser());
 
-//url-encoded
-app.use(express.urlencoded({limit: "100mb", extended: true}));
+app.get("/", (_req, res) => {
+  res.status(200).json({ name: "HomelyHub API", status: "running" });
+});
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
 
-//cookie-parser
-app.use(cookieParser({}));
-
-const port = process.env.PORT;
-
-
-//test route
-app.get("/",(req,res)=>{
-  res.send("HomelyHub server is running")
-})
-
-app.use("/api/v1/rent/user",router);
+app.use("/api/v1/rent/user", userRouter);
 app.use("/api/v1/rent/listing", propertyRouter);
-app.use("/api/v1/rent/user/booking",bookingRouter);
+app.use("/api/v1/rent/user/booking", bookingRouter);
+app.use("/api/v1/rent/trip", tripRouter);
 
+app.use((_req, res) => {
+  res.status(404).json({ status: "fail", message: "Route not found" });
+});
 
-connectDB(); 
+app.use((error, _req, res, _next) => {
+  const status = error.status || (error.type === "entity.too.large" ? 413 : 500);
+  res.status(status).json({
+    status: "fail",
+    message: status === 500 ? "Internal server error" : error.message,
+  });
+});
 
-app.listen(port, ()=>{
-  console.log(`App is running on port no: ${port}`);
-})
+const startServer = async () => {
+  await connectDB();
+  app.listen(port, () => {
+    console.log(`HomelyHub API is running on port ${port}`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error("HomelyHub API could not start:", error.message);
+  process.exitCode = 1;
+});
+
+export { app };

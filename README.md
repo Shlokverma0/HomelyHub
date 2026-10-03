@@ -1,404 +1,119 @@
-# 🏠 HomelyHub
+# HomelyHub
 
-> **A full-stack real-estate marketplace built with the MERN stack for discovering, listing, and managing properties for rent or sale.**
+**A MERN property-booking platform for discovering stays, publishing listings, and managing reservations.**
 
-HomelyHub is a **full-stack real-estate marketplace** that allows users to create accounts, browse property listings, search and filter properties, upload property images, and manage their own listings.
+HomelyHub is an internship project built with React, Express, and MongoDB. Guests can search for properties and reserve available dates. Hosts can publish a stay and view their listings. Optional Groq-powered tools can draft listing descriptions and build trip itineraries.
 
-The application follows a **client-server architecture**, with a React-based frontend communicating with a RESTful Express.js backend backed by MongoDB.
+> Reservations in this project are demonstrations. The app does not collect or process payments.
 
----
+## Features
 
-## ✨ Features
+- Sign up, log in, and manage an account with JWT authentication and HTTP-only cookies
+- Browse property listings with city, price, property-type, room-type, amenity, guest, and date filters
+- View property photos, details, amenities, and check-in information
+- Publish a property listing and view your own listings
+- Reserve a property for a date range; the API checks availability and calculates the total from the stored nightly rate
+- View reservation history and reservation details
+- Optional AI-generated property descriptions and trip plans through Groq
+- Optional profile photo uploads through ImageKit
+- Optional password-reset email through SMTP
 
-### 🔐 Authentication & Authorization
+## Tech Stack
 
-* User registration and login
-* JWT-based authentication
-* Secure password hashing with `bcryptjs`
-* Protected property management routes
-* Token-based authorization
-* User-specific property management
+| Area | Technologies |
+| --- | --- |
+| Frontend | React, Vite, React Router, Redux Toolkit, Axios |
+| Backend | Node.js, Express, Mongoose |
+| Database | MongoDB |
+| Authentication | JWT, HTTP-only cookies, bcrypt |
+| Optional services | Groq, ImageKit, Nodemailer |
 
-### 🏘️ Property Management
+## Run Locally
 
-* Create property listings
-* Browse available properties
-* View detailed property information
-* Update existing listings
-* Delete property listings
-* Support for properties available for **rent or sale**
+### Requirements
 
-### 🔎 Search & Filtering
+- Node.js 20 or newer and npm
+- MongoDB locally or a MongoDB Atlas connection string
+- Groq, ImageKit, and SMTP credentials only if you want to use those optional features
 
-* Search properties by location
-* Filter properties by price
-* Filter by property type
-* API-based querying and filtering
-* Dynamic property listing results
+### 1. Configure the backend
 
-### 🖼️ Image Management
+From the repository root:
 
-* Upload property images
-* Image hosting and delivery through **ImageKit**
-* Display property images throughout the application
-
-### 📧 Email Integration
-
-* Email functionality using **Nodemailer**
-* Backend-based email communication
-
-### 📱 Responsive Frontend
-
-* Responsive React UI
-* Client-side routing with React Router
-* REST API integration using Axios
-* Reusable React components
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-| Technology             | Purpose             |
-| ---------------------- | ------------------- |
-| **React.js**           | Frontend UI         |
-| **React Router**       | Client-side routing |
-| **Axios**              | API communication   |
-| **Tailwind CSS / CSS** | Styling             |
-
-### Backend
-
-| Technology     | Purpose                    |
-| -------------- | -------------------------- |
-| **Node.js**    | Backend runtime            |
-| **Express.js** | REST API framework         |
-| **MongoDB**    | Database                   |
-| **Mongoose**   | MongoDB ODM                |
-| **JWT**        | Authentication             |
-| **bcryptjs**   | Password hashing           |
-| **Nodemailer** | Email communication        |
-| **ImageKit**   | Image storage and delivery |
-
----
-
-## 🏗️ Application Architecture
-
-```text
-                         ┌──────────────────────┐
-                         │      React.js        │
-                         │    Frontend UI       │
-                         │                      │
-                         │ React Router + Axios │
-                         └──────────┬───────────┘
-                                    │
-                                    │ HTTP / REST API
-                                    ▼
-                         ┌──────────────────────┐
-                         │     Express.js       │
-                         │      Backend         │
-                         │                      │
-                         │ Routes / Controllers │
-                         │ Authentication       │
-                         └──────────┬───────────┘
-                                    │
-                  ┌─────────────────┼─────────────────┐
-                  │                 │                 │
-                  ▼                 ▼                 ▼
-          ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-          │   MongoDB    │  │   ImageKit   │  │  Nodemailer  │
-          │              │  │              │  │              │
-          │ Users        │  │ Property     │  │ Email        │
-          │ Properties   │  │ Images       │  │ Services     │
-          └──────────────┘  └──────────────┘  └──────────────┘
+```powershell
+npm install
+Copy-Item .env.example .env
 ```
 
----
+Open `.env` and set at least `MONGO_URI` and a long random `JWT_SECRET`. The other integrations are optional. AI tools return a clear configuration message until `GROQ_API_KEY` is set.
 
-## 📂 Project Structure
+### 2. Start the API
+
+In the repository root:
+
+```powershell
+npm run dev
+```
+
+The API listens on `http://localhost:8080`. The frontend Vite server proxies `/api` requests to it.
+
+### 3. Start the frontend
+
+Open a second terminal:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite, create an account, and publish a listing before trying a reservation. For uploaded photos, use small image files (up to 500 KB each) or add public `http`/`https` image URLs.
+
+## API Overview
+
+Base route: `/api/v1/rent`
+
+| Method | Endpoint | Purpose | Access |
+| --- | --- | --- | --- |
+| `POST` | `/user/signup` | Create an account | Public |
+| `POST` | `/user/login` | Sign in | Public |
+| `GET` | `/user/logout` | Sign out | Public |
+| `GET` | `/user/me` | Get the signed-in account | Signed in |
+| `GET` | `/user/myAccommodation` | List your property listings | Signed in |
+| `POST` | `/listing` | Publish a property | Signed in |
+| `GET` | `/listing` | Search and filter listings | Public |
+| `GET` | `/listing/:id` | Get one listing | Public |
+| `POST` | `/user/booking` | Create a demo reservation | Signed in |
+| `GET` | `/user/booking` | List your reservations | Signed in |
+| `GET` | `/user/booking/:bookingId` | Get one of your reservations | Signed in |
+| `POST` | `/user/generateDescription` | Draft a listing description | Signed in, Groq configured |
+| `POST` | `/trip` | Generate a trip plan and matching stays | Groq configured |
+
+Listing search accepts `city`, `minPrice`, `maxPrice`, `propertyType`, `roomType`, `amenities`, `guests`, `dateIn`, `dateOut`, `page`, and `limit` query parameters.
+
+## Environment Variables
+
+See [`.env.example`](.env.example) for the complete list. Keep your real `.env` file and service keys private; `.env` is ignored by Git.
+
+## Project Structure
 
 ```text
 HomelyHub/
-│
-├── backend/
-│   ├── src/
-│   │   ├── Models/
-│   │   │   ├── userModel.js
-│   │   │   └── propertyModel.js
-│   │   │
-│   │   ├── controllers/
-│   │   │   ├── authControllers.js
-│   │   │   └── propertyController.js
-│   │   │
-│   │   ├── routes/
-│   │   │   ├── userRoutes.js
-│   │   │   └── propertyRouter.js
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── db.js
-│   │   │   ├── token.js
-│   │   │   ├── mail.js
-│   │   │   ├── APIFeatures.js
-│   │   │   └── ImagekitIO.js
-│   │   │
-│   │   └── index.js
-│   │
-│   ├── package.json
-│   └── .env
-│
-└── frontend/
-    ├── src/
-    ├── public/
-    └── package.json
+├── frontend/              # React application
+│   ├── public/assets/     # Local branding and sample photos
+│   └── src/
+├── src/                   # Express API
+│   ├── controllers/
+│   ├── Models/
+│   ├── routes/
+│   ├── services/
+│   └── utils/
+├── .env.example
+└── package.json
 ```
 
----
+## Author
 
-## 🚀 Getting Started
+**Shlok Verma** · [GitHub](https://github.com/Shlokverma0)
 
-### Prerequisites
-
-Make sure you have the following installed:
-
-* **Node.js**
-* **npm**
-* **MongoDB** or a MongoDB Atlas database
-* **ImageKit** account
-* An email service/account for Nodemailer
-
----
-
-## 📥 Installation
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/Arpit-tyagi001/HomelyHub.git
-cd HomelyHub
-```
-
-### 2. Install backend dependencies
-
-```bash
-cd backend
-npm install
-```
-
-### 3. Configure environment variables
-
-Create a `.env` file inside the `backend/` directory:
-
-```env
-PORT=8080
-
-MONGO_URI=your_mongodb_connection_string
-
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=7d
-
-IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
-IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
-IMAGEKIT_URL_ENDPOINT=your_imagekit_url_endpoint
-
-EMAIL_USER=your_email
-EMAIL_PASS=your_email_app_password
-```
-
-> ⚠️ **Never commit your `.env` file or expose your API keys, database credentials, JWT secret, or email credentials.**
-
-### 4. Start the backend
-
-```bash
-npm run dev
-```
-
-The backend will start on the configured port.
-
-### 5. Install frontend dependencies
-
-Open a new terminal:
-
-```bash
-cd frontend
-npm install
-```
-
-### 6. Start the frontend
-
-```bash
-npm run dev
-```
-
-The frontend will be available through the Vite development server.
-
----
-
-## 🔌 API Endpoints
-
-### Authentication
-
-| Method | Endpoint                     | Description                        |
-| ------ | ---------------------------- | ---------------------------------- |
-| `POST` | `/api/v1/rent/user/register` | Register a new user                |
-| `POST` | `/api/v1/rent/user/login`    | Authenticate user and generate JWT |
-
-### Properties
-
-| Method   | Endpoint                   | Description                  |
-| -------- | -------------------------- | ---------------------------- |
-| `GET`    | `/api/v1/rent/listing`     | Retrieve property listings   |
-| `POST`   | `/api/v1/rent/listing`     | Create a property listing    |
-| `GET`    | `/api/v1/rent/listing/:id` | Retrieve a specific property |
-| `PATCH`  | `/api/v1/rent/listing/:id` | Update a property listing    |
-| `DELETE` | `/api/v1/rent/listing/:id` | Delete a property listing    |
-
-> **Note:** Endpoint paths should be verified against the current backend route configuration before publishing this section.
-
----
-
-## 🔑 Authentication Flow
-
-```text
-                 ┌──────────────┐
-                 │     User     │
-                 └──────┬───────┘
-                        │
-                  Register / Login
-                        │
-                        ▼
-                ┌───────────────┐
-                │  Express API  │
-                └───────┬───────┘
-                        │
-              ┌─────────┴─────────┐
-              │                   │
-        Validate User       Verify Password
-              │                   │
-              └─────────┬─────────┘
-                        │
-                    Generate JWT
-                        │
-                        ▼
-                ┌───────────────┐
-                │    Client     │
-                └───────┬───────┘
-                        │
-                    JWT Token
-                        │
-                        ▼
-              Protected API Routes
-                        │
-                        ▼
-                   MongoDB
-```
-
----
-
-## 🧠 Technical Highlights
-
-### RESTful Backend
-
-Designed and implemented a REST API using **Node.js and Express.js** for user authentication and property management.
-
-### JWT Authentication
-
-Implemented token-based authentication to protect private property management operations.
-
-### Secure Password Handling
-
-Used `bcryptjs` to hash user passwords before storing them in the database.
-
-### MongoDB Data Layer
-
-Used **MongoDB with Mongoose** for persistent storage of user and property information.
-
-### Image Uploads
-
-Integrated **ImageKit** to handle property image storage and delivery.
-
-### API Filtering
-
-Implemented reusable API filtering and querying functionality through `APIFeatures.js`.
-
-### Email Integration
-
-Integrated **Nodemailer** for backend email communication.
-
-### React Frontend
-
-Built the client interface using React with reusable components and React Router for navigation.
-
-### Frontend–Backend Integration
-
-Connected the React frontend to the Express REST API using **Axios**.
-
----
-
-## 🔄 Application Flow
-
-```text
-User
- │
- ├── Register / Login
- │
- ▼
-JWT Authentication
- │
- ▼
-Browse Properties
- │
- ├── Search
- ├── Filter
- └── View Details
- │
- ▼
-Authenticated User
- │
- ├── Create Listing
- ├── Update Listing
- └── Delete Listing
- │
- ▼
-Express REST API
- │
- ├── MongoDB
- ├── ImageKit
- └── Nodemailer
-```
-
----
-
-## 🔮 Future Enhancements
-
-The following features are planned for future versions:
-
-* 💳 Property booking and payment integration
-* 🛡️ Admin dashboard
-* ⭐ Property reviews and ratings
-* 🗺️ Map-based property discovery
-* ❤️ Wishlist and saved properties
-* 🔔 Real-time notifications
-* 💬 Buyer–seller messaging
-* 📊 Property-owner analytics dashboard
-* ☁️ Production deployment
-* 🔄 Automated CI/CD pipeline
-
----
-
-## 👨‍💻 Author
-
-### Arpit Tyagi
-
-**Computer Science Engineering Student | Full-Stack Developer**
-
-I build full-stack web applications with a focus on **React, Node.js, Express, MongoDB, Python, and AI-powered applications**.
-
-### Connect
-
-* **GitHub:** [Arpit-tyagi001](https://github.com/Arpit-tyagi001)
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License**.
+Built as the **HomelyHub – Property Booking Platform** project during the Emertxe Full Stack internship.

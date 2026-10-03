@@ -79,6 +79,16 @@ const Header = () => {
 
             <ul className="dropdown-menu" aria-labelledby="dropdownMenuLink">
               <li>
+                <Link className="dropdown-item" to="/user/mybookings">
+                  My reservations
+                </Link>
+              </li>
+              <li>
+                <Link className="dropdown-item" to="/accomodation">
+                  Host dashboard
+                </Link>
+              </li>
+              <li>
                 <Link className="dropdown-item" to="/profile">
                   {" "}
                   My Account

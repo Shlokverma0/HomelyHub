@@ -1,119 +1,164 @@
-import {Property} from "../Models/propertyModel.js";
-import {Booking} from "../Models/bookingModel.js";
+import mongoose from "mongoose";
+import { Booking } from "../Models/bookingModel.js";
+import { Property } from "../Models/propertyModel.js";
 
-//createOrder : booking any property
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-const createOrder = async(req,res) =>{
-  const {amount, propertyId, fromDate, toDate,guests} = req.body;
-
-  //orderID: order_92874918379
-  const orderId = "order_" + Date.now();
-  res.json({
-    success: true,
-    message: "Order created Successfully",
-    orderId,
-    amount,
-    propertyId,
-    fromDate,
-    toDate,
-    guests
-  })
-
-}
-
-//verifyPayment function
-//25, 26 aug
-//1.) save the booking
-//2.) Block these dates.
-
-const verifyPayment = async(req, res) => {
-  const{orderId, bookingDetails, forceStatus} = req.body;
-
-  if(forceStatus == "success"){
-    const paymentId = "pay_" + Date.now();
-
-    //save booking
-    const newBooking = await Booking.create({
-      user:req.user._id,
-      property:bookingDetails.propertyId,
-      price:bookingDetails.price,
-      fromDate:bookingDetails.fromDate,
-      toDate:bookingDetails.toDate,
-      guests:bookingDetails.guests,
-      numberOfnights:bookingDetails.nights,
-      paid:true
-    });
-
-    //tell property those dates are taken
-
-const updatedProperty = await Property.findByIdAndUpdate(
-    bookingDetails.propertyId,{
-      $push:{
-        currentBookings:{
-          bookingId:newBooking._id,
-          fromDate:bookingDetails.fromDate,
-          toDate:bookingDetails.toDate,
-          userId:req.user._id
-        }
-      }
-    },
-    {new:true}
-  );
-    res.json({
-      success:true,
-      message: "Payment successful, booking confirmed!!",
-      paymentId,
-      orderId,
-      booking:newBooking
-    });
-    }else{
-      res.status(400).json({
-        success:false,
-        message:"Payment ffailed!",
-        orderId
-      })
-    }
+const parseDate = (value) => {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
   }
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value
+    ? null
+    : date;
+};
 
-
-//get my bookings
-const getUserBookings = async(req,res)=>{
+const createBooking = async (req, res) => {
+  let booking;
   try {
-    const bookings = await Booking.find({user:req.user._id});
+    const { propertyId, fromDate: fromDateInput, toDate: toDateInput, guests } =
+      req.body;
+    const fromDate = parseDate(fromDateInput);
+    const toDate = parseDate(toDateInput);
+    const guestCount = Number(guests);
+
+    if (!mongoose.isValidObjectId(propertyId)) {
+      return res.status(400).json({ status: "fail", message: "Invalid property" });
+    }
+    if (!fromDate || !toDate || toDate <= fromDate) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Choose valid check-in and check-out dates",
+      });
+    }
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (fromDate < today) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Check-in date cannot be in the past",
+      });
+    }
+    if (!Number.isInteger(guestCount) || guestCount < 1) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Guest count must be at least one",
+      });
+    }
+
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ status: "fail", message: "Property not found" });
+    }
+    if (guestCount > property.maximumGuest) {
+      return res.status(400).json({
+        status: "fail",
+        message: `This property allows up to ${property.maximumGuest} guests`,
+      });
+    }
+
+    const numberOfnights = Math.round((toDate - fromDate) / DAY_MS);
+    const price = property.price * numberOfnights;
+    booking = await Booking.create({
+      property: property._id,
+      user: req.user._id,
+      price,
+      fromDate,
+      toDate,
+      guests: guestCount,
+      numberOfnights,
+      paid: false,
+    });
+
+    // The conditional update makes the availability check atomic, so two
+    // concurrent requests cannot reserve overlapping dates.
+    const reservedProperty = await Property.findOneAndUpdate(
+      {
+        _id: property._id,
+        currentBookings: {
+          $not: {
+            $elemMatch: {
+              fromDate: { $lt: toDate },
+              toDate: { $gt: fromDate },
+            },
+          },
+        },
+      },
+      {
+        $push: {
+          currentBookings: {
+            bookingId: booking._id,
+            fromDate,
+            toDate,
+            userId: req.user._id,
+          },
+        },
+      },
+      { new: true },
+    );
+
+    if (!reservedProperty) {
+      await Booking.findByIdAndDelete(booking._id);
+      return res.status(409).json({
+        status: "fail",
+        message: "Those dates are no longer available. Please choose other dates.",
+      });
+    }
+
+    res.status(201).json({
+      status: "success",
+      message: "Reservation confirmed. No payment was processed.",
+      data: { booking },
+    });
+  } catch (error) {
+    if (booking?._id) await Booking.findByIdAndDelete(booking._id).catch(() => {});
+    res.status(500).json({ status: "fail", message: error.message });
+  }
+};
+
+const getUserBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find({ user: req.user._id })
+      .populate({
+        path: "property",
+        select: "propertyName images address checkInTime checkOutTime",
+      })
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
-      status:"success",
-      data:{
-        bookings
-      }
-    })
-    
+      status: "success",
+      results: bookings.length,
+      data: { bookings },
+    });
   } catch (error) {
-    res.status(401).json({
-      status:"fail",
-      message:error.message
-    })
+    res.status(500).json({ status: "fail", message: error.message });
   }
- }
+};
 
-//get one booking details
-const getBookingDetails  =async(req,res)=>{
-try {
-  const bookings = await Booking.findById(req.params.bookingId);
-
-  res.status(200).json({
-    status: "success",
-    data:{
-      bookings
+const getBookingDetails = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.bookingId)) {
+      return res.status(404).json({ status: "fail", message: "Booking not found" });
     }
-  })
 
+    const booking = await Booking.findOne({
+      _id: req.params.bookingId,
+      user: req.user._id,
+    }).populate({
+      path: "property",
+      select: "propertyName images address checkInTime checkOutTime",
+    });
+
+    if (!booking) {
+      return res.status(404).json({ status: "fail", message: "Booking not found" });
+    }
+
+    res.status(200).json({ status: "success", data: { booking } });
   } catch (error) {
-    res.status(401).json({
-      status:"fail",
-      message: error.message
-    })
+    res.status(500).json({ status: "fail", message: error.message });
   }
-  }
+};
 
-export {getBookingDetails, getUserBookings, verifyPayment, createOrder}
+export { createBooking, getBookingDetails, getUserBookings };

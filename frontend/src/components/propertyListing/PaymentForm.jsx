@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useForm } from "@tanstack/react-form";
 import { DatePicker, Space } from "antd";
+import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import moment from "moment";
-import { STATIC_IS_AUTHENTICATED } from "../../data/staticData";
 
 const PaymentForm = ({
   price,
@@ -11,64 +11,53 @@ const PaymentForm = ({
   address,
   maximumGuest,
   propertyId,
-  currentBookings,
+  currentBookings = [],
 }) => {
-  const [calculatedPrice, setCalulatedPrice] = useState(0);
+  const [selectedDates, setSelectedDates] = useState([]);
   const navigate = useNavigate();
   const { RangePicker } = DatePicker;
-
-  // STATIC: was `useSelector((state) => state.user)`.
-  // TODO: replace with your own auth logic.
-  const [isAuthenticated] = useState(STATIC_IS_AUTHENTICATED);
+  const { user } = useSelector((state) => state.user);
 
   const isDateDisabled = (current) => {
-    const today = moment().startOf("day");
-    if (current.isBefore(today)) {
-      return true;
-    }
-
+    if (current.isBefore(moment().startOf("day"))) return true;
     return currentBookings.some((booking) => {
-      const startDate = moment(booking.fromDate).startOf("day");
-      const endDate = moment(booking.toDate).startOf("day");
-      const currentMoment = moment(current.toDate()).startOf("day");
-
-      return (
-        currentMoment.isSameOrAfter(startDate) &&
-        currentMoment.isSameOrBefore(endDate)
-      );
+      const start = moment(booking.fromDate).startOf("day");
+      const end = moment(booking.toDate).startOf("day");
+      return current.isSameOrAfter(start) && current.isBefore(end);
     });
   };
-  const form = useForm({
-    defaultValues: {
-      dateRange: [],
-      guests: "",
-      name: "",
-      phoneNumber: "",
-    },
-    onSubmit: async ({ value }) => {
-      const [checkinDate, checkoutDate] = value.dateRange;
-      const nights = moment(checkoutDate).diff(moment(checkinDate), "days");
-      const { name, guests, phoneNumber } = value;
-      if (name && guests && phoneNumber && checkinDate && checkoutDate) {
-        // TODO: add your "save booking details" logic here.
-        // The payload the original app used:
-        const paymentDetails = {
-          checkinDate: checkinDate,
-          checkoutDate: checkoutDate,
-          nights,
-          totalPrice: calculatedPrice,
-          propertyName,
-          address,
-          guests: Number(guests),
-          name,
-          phoneNumber,
-        };
-        console.log(paymentDetails);
 
-        navigate(`/payment/${propertyId}`);
-      } else {
-        alert("Please fill all fields correctly before proceeding.");
+  const form = useForm({
+    defaultValues: { dateRange: [], guests: "1" },
+    onSubmit: async ({ value }) => {
+      const [fromDate, toDate] = value.dateRange;
+      const nights = moment(toDate, "YYYY-MM-DD").diff(
+        moment(fromDate, "YYYY-MM-DD"),
+        "days",
+      );
+      const guestCount = Number(value.guests);
+      if (!fromDate || !toDate || nights < 1) {
+        window.alert("Choose valid check-in and check-out dates.");
+        return;
       }
+      if (!Number.isInteger(guestCount) || guestCount < 1 || guestCount > maximumGuest) {
+        window.alert(`Choose between 1 and ${maximumGuest} guests.`);
+        return;
+      }
+
+      const draft = {
+        propertyId,
+        propertyName,
+        address,
+        pricePerNight: Number(price),
+        fromDate,
+        toDate,
+        guests: guestCount,
+        nights,
+        totalPrice: Number(price) * nights,
+      };
+      sessionStorage.setItem("homelyhub_booking_draft", JSON.stringify(draft));
+      navigate(`/payment/${propertyId}`);
     },
   });
 
@@ -76,14 +65,14 @@ const PaymentForm = ({
     <div className="form-container">
       <form
         className="payment-form"
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={(event) => {
+          event.preventDefault();
           form.handleSubmit();
         }}
       >
         <div className="price-pernight">
-          Price: <b>&#8377;{price}</b>
-          <span> / Per night</span>
+          Price: <b>&#8377;{Number(price).toLocaleString("en-IN")}</b>
+          <span> / night</span>
         </div>
         <div className="payment-field">
           <form.Field name="dateRange">
@@ -91,97 +80,44 @@ const PaymentForm = ({
               <div className="date">
                 <Space direction="vertical" size={12}>
                   <RangePicker
+                    value={selectedDates}
                     format="YYYY-MM-DD"
-                    picker="date"
                     disabledDate={isDateDisabled}
-                    onChange={(value, dateString) => {
-                      field.handleChange(dateString);
-                      const [checkin, checkout] = dateString;
-                      if (checkin && checkout) {
-                        const nights = moment(checkout, "YYYY-MM-DD").diff(
-                          moment(checkin, "YYYY-MM-DD"),
-                          "days"
-                        );
-                        const total = price * nights;
-                        setCalulatedPrice(total);
-                      } else {
-                        setCalulatedPrice(0);
-                      }
+                    onChange={(dates, dateStrings) => {
+                      setSelectedDates(dates || []);
+                      field.handleChange(dateStrings || []);
                     }}
                   />
                 </Space>
               </div>
             )}
           </form.Field>
-          <form.Field
-            name="guests"
-            validators={{
-              onChange: ({ value }) =>
-                value > 0 && value <= maximumGuest
-                  ? undefined
-                  : `Guests must be 1 - ${maximumGuest}`,
-            }}
-          >
+          <form.Field name="guests">
             {(field) => (
               <div className="guest">
-                <label className="payment-labels">Number of guests:</label>
-                <br></br>
+                <label className="payment-labels" htmlFor="booking-guests">
+                  Number of guests (max {maximumGuest}):
+                </label>
                 <input
+                  id="booking-guests"
                   type="number"
+                  min="1"
+                  max={maximumGuest}
                   className="no-of-guest"
-                  placeholder="Guest"
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                ></input>
-                {field.state.meta.errors && (
-                  <p style={{ color: "red" }}>{field.state.meta.errors}</p>
-                )}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                />
               </div>
             )}
           </form.Field>
-          <div className="name-phoneno">
-            <form.Field name="name">
-              {(field) => (
-                <>
-                  <label className="payment-labels">Your full name:</label>{" "}
-                  <br></br>
-                  <input
-                    type="text"
-                    className="full-name"
-                    placeholder="Name"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  ></input>
-                </>
-              )}
-            </form.Field>
-            <br></br>
-            <form.Field name="phoneNumber">
-              {(field) => (
-                <>
-                  <label className="payment-labels">Phone Number:</label>{" "}
-                  <br></br>
-                  <input
-                    type="number"
-                    className="phone-number"
-                    placeholder="Number"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  ></input>
-                </>
-              )}
-            </form.Field>
-          </div>
         </div>
         <div className="book-place">
-          {!isAuthenticated ? (
-
-            <button type="button" onClick={() => navigate("/login")}>
-              Login to Book
-            </button>
-          ) : (
-            <button>Book this place &#8377; {calculatedPrice}</button>
-          )}
+          <button type="submit">
+            {user ? "Review reservation" : "Continue to login and reserve"}
+            {selectedDates.length === 2 && (
+              <> · &#8377;{(Number(price) * moment(selectedDates[1]).diff(moment(selectedDates[0]), "days")).toLocaleString("en-IN")}</>
+            )}
+          </button>
         </div>
       </form>
     </div>

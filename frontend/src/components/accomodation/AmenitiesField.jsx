@@ -10,28 +10,29 @@ const initialamenities = [
   },
   {
     id: "parking",
-    value: "Free Parking",
+    value: "Free parking",
     checked: false,
     icon: "garage_home",
   },
   {
     id: "washingmachine",
-    value: "Washing Machine",
+    value: "Washing machine",
     icon: "local_laundry_service",
     checked: false,
   },
-  { id: "tv", value: "Tv", checked: false, icon: "tv" },
+  { id: "tv", value: "TV", checked: false, icon: "tv" },
   { id: "pool", value: "Pool", checked: false, icon: "pool" },
-  { id: "ac", value: "Ac", checked: false, icon: "air" },
+  { id: "ac", value: "AC", checked: false, icon: "air" },
 ];
 
-const AmenitiesField = ({ form }) => {
+const AmenitiesField = ({ form: _form }) => {
+  const Field = _form.Field;
   return (
     <div className="perks-container">
       <h4 className="perks-header">Amenities</h4>
       <p className="form-paras">Select perks</p>
 
-      <form.Field name="amenities">
+      <Field name="amenities">
         {(field) => (
           <div className="perks row">
             {initialamenities.map((amenity) => (
@@ -70,7 +71,7 @@ const AmenitiesField = ({ form }) => {
             ))}
           </div>
         )}
-      </form.Field>
+      </Field>
     </div>
   );
 };

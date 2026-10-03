@@ -2,7 +2,6 @@
 // Mailgen  = builds a good looking email for us
 // nodemailer = actually sends it
 // (the first import below is left over and not used)
-import { text } from "express";
 import Mailgen from "mailgen";
 import nodemailer from "nodemailer";
 
@@ -15,7 +14,7 @@ const sendMail = async (options) => {
     theme: "default",
     product: {
       name: "Homely Hub",
-      link: "https://homelyhub.vercel.com",
+      link: process.env.ORIGIN_ACCESS_URL || "http://localhost:5173",
     },
   });
 
@@ -26,12 +25,11 @@ const sendMail = async (options) => {
 
   // The transporter is the post office - which server to
   // use and the login for it. All of it sits in .env.
-  // NOTE: line below says process.emit, it should be
-  // process.env. A small typo, good one to spot.
+  const port = Number(process.env.MAILTRAP_SMTP_PORT) || 2525;
   const transporter = nodemailer.createTransport({
     host: process.env.MAILTRAP_SMTP_HOST,
-    port: process.emit.MAILTRAP_SMTP_PORT,
-    secure: false,
+    port,
+    secure: port === 465,
     auth: {
       user: process.env.MAILTRAP_SMTP_USER,
       pass: process.env.MAILTRAP_SMTP_PASS,
@@ -47,13 +45,7 @@ const sendMail = async (options) => {
     html: emailBody,
   };
 
-  try {
-    // send it. try/catch so a mail failure does not crash
-    // the whole server
-    await transporter.sendMail(mail);
-  } catch (error) {
-    console.error("Email Failed", error);
-  }
+  await transporter.sendMail(mail);
 };
 
 

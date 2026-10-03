@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const ImagesUploading = ({ field }) => {
   const [imageInput, setImageInput] = useState("");
@@ -12,6 +13,21 @@ const ImagesUploading = ({ field }) => {
     const file = event.target.files[0];
 
     if (file) {
+      if (field.state.value.length >= 12) {
+        toast.error("You can add up to 12 photos.");
+        event.target.value = "";
+        return;
+      }
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        toast.error("Choose a JPG, PNG, or WebP image.");
+        event.target.value = "";
+        return;
+      }
+      if (file.size > 500 * 1024) {
+        toast.error("Each uploaded photo must be 500 KB or smaller.");
+        event.target.value = "";
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         const newImage = {
@@ -25,13 +41,19 @@ const ImagesUploading = ({ field }) => {
   };
 
   const handleAddImage = () => {
-    if (imageInput) {
+    if (field.state.value.length >= 12) {
+      toast.error("You can add up to 12 photos.");
+      return;
+    }
+    if (/^https?:\/\//i.test(imageInput.trim())) {
       const newImage = {
         public_id: `url_${Date.now()}`,
-        url: imageInput,
+        url: imageInput.trim(),
       };
       field.handleChange([...field.state.value, newImage]);
       setImageInput("");
+    } else if (imageInput) {
+      toast.error("Enter a valid http or https image URL.");
     }
   };
 
@@ -43,8 +65,8 @@ const ImagesUploading = ({ field }) => {
 
   return (
     <div className="photos-container">
-      <h4 className="photos-header">Photos</h4>
-      <label className="form-labels">More = Better</label>
+        <h4 className="photos-header">Photos</h4>
+      <label className="form-labels">Add up to 12 photos (500 KB each)</label>
 
       <div className="image-link-container">
         <input
@@ -82,7 +104,7 @@ const ImagesUploading = ({ field }) => {
         <label className="upload">
           <input
             type="file"
-            accept="image/jpeg"
+          accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={handleFileChange}
           />

@@ -122,7 +122,7 @@ const protect = async (req, res, next) => {
     // and mobile apps. It looks like:  Bearer <token>
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
+      req.headers.authorization.startsWith("Bearer ")
     ) {
       // split on the space, [1] is the part after 'Bearer'
       token = req.headers.authorization.split(" ")[1];
@@ -363,7 +363,7 @@ const resetPassword = async (req, res) => {
   } catch (error) {
     res.status(400).json({
       status: "fail",
-      error: error.message,
+      message: error.message,
     });
   }
 };
