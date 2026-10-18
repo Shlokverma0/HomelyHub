@@ -3,7 +3,7 @@ services:
     name: homelyhub-app
     runtime: node
     plan: free
-    buildCommand: npm ci && npm --prefix frontend ci && npm --prefix frontend run build
+    buildCommand: npm ci --include=dev && npm --prefix frontend ci --include=dev && npm --prefix frontend run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:
