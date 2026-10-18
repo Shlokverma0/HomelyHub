@@ -6,6 +6,8 @@ HomelyHub is an internship project built with React, Express, and MongoDB. Guest
 
 **Repository:** [Shlokverma0/HomelyHub](https://github.com/Shlokverma0/HomelyHub)
 
+**Live app:** [homelyhub-app-np20.onrender.com](https://homelyhub-app-np20.onrender.com) · [API health check](https://homelyhub-app-np20.onrender.com/health)
+
 **API route overview:** [Endpoints and access levels](#api-overview)
 
 > Reservations in this project are demonstrations. The app does not collect or process payments.
@@ -107,7 +109,7 @@ The repository includes [`render.yaml`](render.yaml) for a single Render web ser
 1. Push the repository to GitHub and choose **New → Blueprint** in the Render dashboard.
 2. Connect `Shlokverma0/HomelyHub` and let Render read `render.yaml` from the `main` branch.
 3. Set `MONGO_URI` to a MongoDB Atlas connection string. Add the service's outbound IP ranges from Render's **Connect → Outbound** panel to the Atlas project's IP access list.
-4. Deploy. Render supplies the service URL to the app automatically. Check `https://<your-service>.onrender.com/health` for the health response and open the service root for the app.
+4. Deploy. Render supplies the service URL to the app automatically. The current deployment is [homelyhub-app-np20.onrender.com](https://homelyhub-app-np20.onrender.com); check its [health endpoint](https://homelyhub-app-np20.onrender.com/health).
 
 The blueprint generates `JWT_SECRET` for the service. Optional integrations such as Groq, ImageKit, and SMTP can be added later using the variable names in `.env.example`. Never commit production secrets. Render Free web services can spin down when idle, so the first request after inactivity may be slow.
 
