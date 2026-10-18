@@ -2,6 +2,9 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { bookingRouter } from "./routes/bookingRouter.js";
 import { propertyRouter } from "./routes/propertyRouter.js";
 import { tripRouter } from "./routes/tripRouter.js";
@@ -10,7 +13,10 @@ import connectDB from "./utils/db.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 8080;
-const allowedOrigins = (process.env.FRONTEND_ORIGIN || "http://localhost:5173")
+const frontendDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../frontend/dist");
+const frontendIndex = path.join(frontendDist, "index.html");
+const defaultOrigin = process.env.RENDER_EXTERNAL_URL || "http://localhost:5173";
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || defaultOrigin)
   .split(",")
   .map((origin) => origin.trim());
 
@@ -39,6 +45,16 @@ app.use("/api/v1/rent/user", userRouter);
 app.use("/api/v1/rent/listing", propertyRouter);
 app.use("/api/v1/rent/user/booking", bookingRouter);
 app.use("/api/v1/rent/trip", tripRouter);
+
+// Serve the Vite build from the same origin in production, so cookie-based
+// authentication and relative /api requests work without a second service.
+if (existsSync(frontendIndex)) {
+  app.use(express.static(frontendDist));
+  app.use((req, res, next) => {
+    if (req.method !== "GET" || req.path === "/api" || req.path.startsWith("/api/")) return next();
+    return res.sendFile(frontendIndex);
+  });
+}
 
 app.use((_req, res) => {
   res.status(404).json({ status: "fail", message: "Route not found" });

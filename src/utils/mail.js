@@ -14,7 +14,7 @@ const sendMail = async (options) => {
     theme: "default",
     product: {
       name: "Homely Hub",
-      link: process.env.ORIGIN_ACCESS_URL || "http://localhost:5173",
+      link: process.env.ORIGIN_ACCESS_URL || process.env.RENDER_EXTERNAL_URL || "http://localhost:5173",
     },
   });
 

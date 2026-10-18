@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: homelyhub-app
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm --prefix frontend ci && npm --prefix frontend run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_COOKIE_EXPIRES_IN
+        value: 7

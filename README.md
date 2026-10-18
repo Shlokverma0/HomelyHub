@@ -4,6 +4,10 @@
 
 HomelyHub is an internship project built with React, Express, and MongoDB. Guests can search for properties and reserve available dates. Hosts can publish a stay and view their listings. Optional Groq-powered tools can draft listing descriptions and build trip itineraries.
 
+**Repository:** [Shlokverma0/HomelyHub](https://github.com/Shlokverma0/HomelyHub)
+
+**API route overview:** [Endpoints and access levels](#api-overview)
+
 > Reservations in this project are demonstrations. The app does not collect or process payments.
 
 ## Features
@@ -75,6 +79,7 @@ Base route: `/api/v1/rent`
 
 | Method | Endpoint | Purpose | Access |
 | --- | --- | --- | --- |
+| `GET` | `/health` | Service health check | Public |
 | `POST` | `/user/signup` | Create an account | Public |
 | `POST` | `/user/login` | Sign in | Public |
 | `GET` | `/user/logout` | Sign out | Public |
@@ -95,6 +100,17 @@ Listing search accepts `city`, `minPrice`, `maxPrice`, `propertyType`, `roomType
 
 See [`.env.example`](.env.example) for the complete list. Keep your real `.env` file and service keys private; `.env` is ignored by Git.
 
+## Deploy on Render
+
+The repository includes [`render.yaml`](render.yaml) for a single Render web service. It builds the Vite frontend and serves it from the Express app, so the website and API share one origin. This keeps the existing relative `/api` requests and cookie-based sign-in on the same host.
+
+1. Push the repository to GitHub and choose **New → Blueprint** in the Render dashboard.
+2. Connect `Shlokverma0/HomelyHub` and let Render read `render.yaml` from the `main` branch.
+3. Set `MONGO_URI` to a MongoDB Atlas connection string. Add the service's outbound IP ranges from Render's **Connect → Outbound** panel to the Atlas project's IP access list.
+4. Deploy. Render supplies the service URL to the app automatically. Check `https://<your-service>.onrender.com/health` for the health response and open the service root for the app.
+
+The blueprint generates `JWT_SECRET` for the service. Optional integrations such as Groq, ImageKit, and SMTP can be added later using the variable names in `.env.example`. Never commit production secrets. Render Free web services can spin down when idle, so the first request after inactivity may be slow.
+
 ## Project Structure
 
 ```text
@@ -109,6 +125,7 @@ HomelyHub/
 │   ├── services/
 │   └── utils/
 ├── .env.example
+├── render.yaml            # Render web service configuration
 └── package.json
 ```
 
