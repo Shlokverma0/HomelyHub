@@ -10,7 +10,20 @@ HomelyHub is an internship project built with React, Express, and MongoDB. Guest
 
 **API route overview:** [Endpoints and access levels](#api-overview)
 
+![HomelyHub property discovery page](frontend/public/readme/wsa-homelyhub-app-screenshot.jpg)
+
 > Reservations in this project are demonstrations. The app does not collect or process payments.
+
+## Contents
+
+- [Features](#features)
+- [Technology](#tech-stack)
+- [Run locally](#run-locally)
+- [API overview](#api-overview)
+- [Environment variables](#environment-variables)
+- [Deploy on Render](#deploy-on-render)
+- [Project structure](#project-structure)
+- [Author](#author)
 
 ## Features
 
@@ -77,11 +90,10 @@ Open the local URL printed by Vite, create an account, and publish a listing bef
 
 ## API Overview
 
-Base route: `/api/v1/rent`
+Most application routes use the `/api/v1/rent` prefix. The health check is served at `/health`.
 
 | Method | Endpoint | Purpose | Access |
 | --- | --- | --- | --- |
-| `GET` | `/health` | Service health check | Public |
 | `POST` | `/user/signup` | Create an account | Public |
 | `POST` | `/user/login` | Sign in | Public |
 | `GET` | `/user/logout` | Sign out | Public |
@@ -97,6 +109,8 @@ Base route: `/api/v1/rent`
 | `POST` | `/trip` | Generate a trip plan and matching stays | Groq configured |
 
 Listing search accepts `city`, `minPrice`, `maxPrice`, `propertyType`, `roomType`, `amenities`, `guests`, `dateIn`, `dateOut`, `page`, and `limit` query parameters.
+
+The deployed health endpoint is [`/health`](https://homelyhub-app-np20.onrender.com/health).
 
 ## Environment Variables
 
