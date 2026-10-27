@@ -37,6 +37,9 @@ HomelyHub is an internship project built with React, Express, and MongoDB. Guest
 - Optional profile photo uploads through ImageKit
 - Optional password-reset email through SMTP
 
+## MCP Server (AI integration)
+The `mcp-server/` folder contains a Python Model Context Protocol server that exposes the listing search and property details endpoints as LLM tools. Tested with MCP Inspector. See [mcp-server/README.md](mcp-server/README.md).
+
 ## Tech Stack
 
 | Area | Technologies |
