@@ -11,6 +11,7 @@ HomelyHub is an internship project built with React, Express, and MongoDB. Guest
 **API route overview:** [Endpoints and access levels](#api-overview)
 
 ![HomelyHub property discovery page](frontend/public/readme/wsa-homelyhub-app-screenshot.jpg)
+![MCP Inspector](screenshot.png)
 
 > Reservations in this project are demonstrations. The app does not collect or process payments.
 
